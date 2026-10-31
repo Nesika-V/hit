@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}</style>
+<title>Infotech Sentinel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: instrument-panel sales page. Hairline-ruled panels on graphite, one indigo accent, mono type for data.
+   Hero (headline | sample ledger) -> walkthrough window -> coverage cells -> product rows -> FAQ -> closing band. */
+:root {
+  --bg: #101216;
+  --panel: #161920;
+  --line: #2a2f39;
+  --fg: #e7e9ee;
+  --muted: #9ba2ae;
+  --accent: #8089ff;
+  --accent-ink: #0b0d14;
+  --crit: #ff7c78;
+  --warn: #ebb44e;
+  --ok: #5fd39b;
+  --f-display: "Archivo", "Arial Black", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #edeff3;
+    --panel: #f8f9fb;
+    --line: #cbd0d9;
+    --fg: #12151b;
+    --muted: #515b6a;
+    --accent: #3940d1;
+    --accent-ink: #ffffff;
+    --crit: #b3261e;
+    --warn: #7f4c00;
+    --ok: #17684a;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #edeff3;
+  --panel: #f8f9fb;
+  --line: #cbd0d9;
+  --fg: #12151b;
+  --muted: #515b6a;
+  --accent: #3940d1;
+  --accent-ink: #ffffff;
+  --crit: #b3261e;
+  --warn: #7f4c00;
+  --ok: #17684a;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+.wrap { max-width: 1120px; margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 20px;
+  border: 1px solid var(--line); border-radius: 2px;
+  background: transparent; color: var(--fg);
+  font: 500 13px/1 var(--f-mono); letter-spacing: .04em; text-transform: uppercase;
+  text-decoration: none; cursor: pointer;
+  transition: border-color .15s, filter .15s;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.1); }
+
+/* Header */
+.top {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding-block: 18px; border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font: 800 14px/1 var(--f-display); font-stretch: 125%;
+  letter-spacing: .06em; text-transform: uppercase;
+}
+.brand svg { flex: none; color: var(--fg); }
+.nav { display: flex; align-items: center; gap: 6px 24px; }
+.nav .link {
+  padding-block: 8px; color: var(--muted); text-decoration: none;
+  font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase;
+  transition: color .15s;
+}
+.nav .link:hover { color: var(--fg); }
+.nav .btn { min-height: 36px; padding: 0 14px; font-size: 12px; }
+
+/* Hero */
+.hero {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 48px; align-items: center; padding-block: 72px 64px;
+}
+.hero > * { min-width: 0; }
+.eyebrow {
+  margin: 0 0 20px; color: var(--accent);
+  font: 500 12px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase;
+}
+h1 {
+  margin: 0 0 20px;
+  font: 800 clamp(1.9rem, 4.2vw, 3.1rem)/1.06 var(--f-display); font-stretch: 125%;
+  letter-spacing: -.01em; text-wrap: balance;
+}
+.lede { max-width: 52ch; margin: 0 0 32px; color: var(--muted); font-size: 1.0625rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Sample discovery ledger */
+.ledger {
+  position: relative; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
+}
+.ledger::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: .5; pointer-events: none;
+  animation: scan 7s linear infinite;
+}
+@keyframes scan { from { top: 0; } to { top: 100%; } }
+.ledger-head, .ledger-foot {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px;
+  padding: 12px 16px;
+  font: 500 12px/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+}
+.ledger-head { border-bottom: 1px solid var(--line); }
+.ledger-foot { text-transform: none; letter-spacing: .02em; }
+.ledger ul { list-style: none; margin: 0; padding: 0; }
+.ledger li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center; column-gap: 16px; row-gap: 6px;
+  padding: 14px 16px; border-bottom: 1px solid var(--line);
+}
+.asset { font: 500 13px/1.4 var(--f-mono); overflow-wrap: anywhere; }
+.kind { font: 400 12px/1.4 var(--f-mono); color: var(--muted); }
+.tag {
+  justify-self: start;
+  padding: 5px 8px; border-left: 3px solid currentColor;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  font: 500 11px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase;
+}
+.tag.ok { color: var(--ok); }
+.tag.warn { color: var(--warn); }
+.tag.crit { color: var(--crit); }
+
+/* Sections */
+.sec { padding-block: 64px; border-top: 1px solid var(--line); }
+.sec-head { display: grid; gap: 8px; max-width: 60ch; margin-bottom: 28px; }
+h2 {
+  margin: 0;
+  font: 800 clamp(1.45rem, 3vw, 2rem)/1.15 var(--f-display); font-stretch: 125%;
+  text-wrap: balance;
+}
+.sec-head p { margin: 0; color: var(--muted); }
+
+/* Demo window */
+.window { background: var(--panel); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.window-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+  font: 400 12px/1.4 var(--f-mono); color: var(--muted);
+}
+.window-bar a { color: var(--accent); text-decoration: none; }
+.window-bar a:hover { text-decoration: underline; }
+/* The iframe is taller than its frame, and the frame clips the overflow.
+   Raise --crop-bottom to hide more of the bottom strip; set --crop-top to hide a strip at the top. */
+.embed {
+  --crop-top: 0px;
+  --crop-bottom: 56px;
+  position: relative; width: 100%; max-width: 100%; overflow: hidden;
+  aspect-ratio: 1.85; max-height: 80vh; max-height: 80svh;
+}
+.embed iframe {
+  position: absolute; left: 0; top: calc(-1 * var(--crop-top));
+  width: 100%; height: calc(100% + var(--crop-top) + var(--crop-bottom)); border: 0;
+}
+
+/* Coverage cells */
+.cells {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px; background: var(--line); border: 1px solid var(--line);
+}
+.cell { display: grid; align-content: start; gap: 10px; min-width: 0; padding: 24px 20px; background: var(--panel); }
+.cell .lab { font: 500 12px/1 var(--f-mono); letter-spacing: .14em; color: var(--accent); }
+.cell h3 { margin: 0; font: 600 1.0625rem/1.3 var(--f-body); }
+.cell p { margin: 0; color: var(--muted); font-size: .9375rem; }
+
+/* Product rows */
+.rows { margin: 0; border-top: 1px solid var(--line); }
+.rows > div {
+  display: grid; grid-template-columns: minmax(0, .5fr) minmax(0, 1fr); gap: 8px 32px;
+  padding: 22px 0; border-bottom: 1px solid var(--line);
+}
+.rows dt { font: 600 1.125rem/1.3 var(--f-body); }
+.rows dd { margin: 0; max-width: 62ch; color: var(--muted); }
+
+/* FAQ */
+.faq { border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 0; list-style: none; cursor: pointer;
+  font: 600 1.0625rem/1.4 var(--f-body);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; color: var(--accent); font: 400 20px/1 var(--f-mono); }
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p { max-width: 64ch; margin: 0 0 20px; color: var(--muted); }
+
+/* Closing band */
+.cta {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 32px 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
+}
+.cta h2 { max-width: 26ch; }
+.cta-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Footer */
+.foot {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px;
+  margin-top: 64px; padding-block: 28px 40px; border-top: 1px solid var(--line);
+  font: 400 12px/1.5 var(--f-mono); color: var(--muted);
+}
+
+@media (max-width: 960px) {
+  .cells { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 880px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding-block: 44px 40px; }
+}
+@media (max-width: 700px) {
+  .nav .link { display: none; }
+  .rows > div { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .embed { aspect-ratio: 4 / 3; }
+  .sec { padding-block: 44px; }
+  .cta { padding: 24px 20px; }
+}
+@media (max-width: 520px) {
+  .cells { grid-template-columns: minmax(0, 1fr); }
+  .ledger li { grid-template-columns: minmax(0, 1fr) auto; }
+  .asset { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger::after { animation: none; display: none; }
+  .btn, .nav .link { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 4v12M4 10h12" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+        <rect x="8" y="8" width="4" height="4" fill="var(--accent)"/>
+      </svg>
+      Infotech Sentinel
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a class="link" href="#demo">Walkthrough</a>
+      <a class="link" href="#coverage">Coverage</a>
+      <a class="link" href="#faq">FAQ</a>
+      <a class="btn" href="https://asm.hackersinfotech.com" target="_blank" rel="noopener">Open app &#8599;</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Attack surface management</p>
+        <h1>Know every asset you expose to the internet.</h1>
+        <p class="lede">Sentinel finds the domains, subdomains, open ports, certificates and cloud storage tied to your organization, including the ones nobody remembers deploying.</p>
+        <div class="actions">
+          <a class="btn primary" href="#demo">Watch the walkthrough</a>
+          <a class="btn" href="https://asm.hackersinfotech.com" target="_blank" rel="noopener">Open the app &#8599;</a>
+        </div>
+      </div>
+
+      <section class="ledger" aria-label="Sample discovery results">
+        <div class="ledger-head"><span>Discovery &middot; example.com</span><span>Sample data</span></div>
+        <ul>
+          <li><span class="asset">api.example.com</span><span class="kind">Subdomain</span><span class="tag ok">Tracked</span></li>
+          <li><span class="asset">staging-2.example.com</span><span class="kind">Subdomain</span><span class="tag warn">Unmanaged</span></li>
+          <li><span class="asset">203.0.113.18:8443</span><span class="kind">Open port</span><span class="tag crit">Exposed</span></li>
+          <li><span class="asset">backups.example.com</span><span class="kind">Storage bucket</span><span class="tag crit">Public</span></li>
+          <li><span class="asset">vpn.example.com</span><span class="kind">TLS certificate</span><span class="tag warn">Expires in 9 days</span></li>
+        </ul>
+        <div class="ledger-foot"><span>5 assets found</span><span>4 need review</span></div>
+      </section>
+    </section>
+
+    <section class="sec" id="demo">
+      <div class="sec-head">
+        <h2>See it before you sign in</h2>
+        <p>A guided walkthrough of asm.hackersinfotech.com, from the first scan to the full list of exposed assets.</p>
+      </div>
+      <div class="window">
+        <div class="window-bar">
+          <span>asm.hackersinfotech.com &middot; interactive demo</span>
+          <a href="https://app.supademo.com/embed/cmvvz0ww3048pqmxivk0o49nd?embed_v=2&amp;utm_source=embed" target="_blank" rel="noopener">Open in a new tab &#8599;</a>
+        </div>
+        <div class="embed">
+          <iframe src="https://app.supademo.com/embed/cmvvz0ww3048pqmxivk0o49nd?embed_v=2&amp;utm_source=embed" loading="lazy" title="Uncover Your Full Attack Surface in asm.hackersinfotech.com" allow="clipboard-write" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="coverage">
+      <div class="sec-head">
+        <h2>Four layers of what an outsider can see</h2>
+        <p>Attackers start from the outside. Sentinel starts there too.</p>
+      </div>
+      <div class="cells">
+        <article class="cell">
+          <span class="lab">DNS</span>
+          <h3>Domains and subdomains</h3>
+          <p>Every hostname that resolves to your organization, including staging sites and old campaign domains.</p>
+        </article>
+        <article class="cell">
+          <span class="lab">NET</span>
+          <h3>Open ports and services</h3>
+          <p>What answers on each address, so a database or admin panel on the public internet stands out.</p>
+        </article>
+        <article class="cell">
+          <span class="lab">TLS</span>
+          <h3>Certificates</h3>
+          <p>Expiry dates and mismatches, listed before a browser warning tells your customers.</p>
+        </article>
+        <article class="cell">
+          <span class="lab">CLOUD</span>
+          <h3>Storage and cloud assets</h3>
+          <p>Buckets and hosted services tied to your brand that nobody on the team is tracking.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="sec" id="product">
+      <div class="sec-head">
+        <h2>What you get</h2>
+      </div>
+      <dl class="rows">
+        <div>
+          <dt>One list of everything</dt>
+          <dd>Every discovered domain, subdomain, port, certificate and cloud asset in one place, so the question "do we own that?" has an answer.</dd>
+        </div>
+        <div>
+          <dt>An executive dashboard</dt>
+          <dd>Charts and a world map that show the state of your exposure at a glance, built for the people who need the summary and not the scan output.</dd>
+        </div>
+        <div>
+          <dt>Findings that name the problem</dt>
+          <dd>Each asset is marked tracked, unmanaged, exposed or expiring, so your team knows what to fix first.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="sec" id="faq">
+      <div class="sec-head">
+        <h2>Questions</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>What is an attack surface?</summary>
+          <p>Everything about your organization that someone on the internet can reach: websites, subdomains, servers, open ports, certificates and cloud storage.</p>
+        </details>
+        <details>
+          <summary>What does attack surface management do?</summary>
+          <p>It finds those assets, checks what is exposed and keeps the list current, so a forgotten server does not become the way in.</p>
+        </details>
+        <details>
+          <summary>Why do forgotten assets matter?</summary>
+          <p>Attackers scan the internet for old staging hosts, unpatched services and public storage buckets. If your team does not know an asset exists, nobody is patching it.</p>
+        </details>
+        <details>
+          <summary>How do I try Sentinel?</summary>
+          <p>Watch the walkthrough above, or open asm.hackersinfotech.com and look at your own organization.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="cta">
+        <h2>See what an outsider can see of your organization.</h2>
+        <div class="cta-actions">
+          <a class="btn primary" href="https://asm.hackersinfotech.com" target="_blank" rel="noopener">Open the app &#8599;</a>
+          <a class="btn" href="#demo">Watch the walkthrough</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Infotech Sentinel &middot; Attack surface management</span>
+    <span>Sample data uses example.com and reserved documentation addresses.</span>
+  </footer>
+</div>
